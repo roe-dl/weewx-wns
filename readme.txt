@@ -20,6 +20,7 @@ wee_extension --install weewx-wns.zip
 
 [StdRESTful]
     [[Wns]]
+        enable = true
         station = station ID
         api_key = WNS-Kennung
 

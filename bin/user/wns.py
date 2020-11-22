@@ -47,7 +47,7 @@ from weeutil.weeutil import to_bool, to_int
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 
-VERSION = "0.2"
+VERSION = "0.3"
 
 REQUIRED_WEEWX = "3.8.0"
 if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
@@ -130,7 +130,11 @@ class Wns(weewx.restx.StdRESTbase):
            "monthET":"group_rain",
            "yearET":"group_rain",
            "radiation1hMax":"group_radiation",
-           "radiationDayMax":"group_radiation"})
+           "radiationDayMax":"group_radiation",
+           "windSpeed1hMax":"group_speed",
+           "windGust1hMax":"group_speed",
+           "windSpeedDayMax":"group_speed",
+           "windGustDayMax":"group_speed"})
         
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -138,74 +142,82 @@ class Wns(weewx.restx.StdRESTbase):
 
 class WnsThread(weewx.restx.RESTThread):
 
-    _DATA_MAP = {'T2AKT_':   ('outTemp','{:.1f}',1.0),
-                 'T2MIN_':   ('outTempDayMin','{:.1f}',1.0),
-                 'T2MAX_':   ('outTempDayMax','{:.1f}',1.0),
-                 'T2D1H_':   ('outTempDiff1h','{:.1f}',1.0),
-                 'T5AKT_':   ('','{:.1f}',1.0),
-                 'T5MIN_':   ('','{:.1f}',1.0),
-                 'LFAKT_':   ('outHumidity','{:.0f}',1.0),
-                 'RRD05_':   ('rain','{:.1f}',1.0),
-                 'RRD10_':   ('','{:.1f}',1.0),
-                 'RRD1H_':   ('hourRain','{:.1f}',1.0),
-                 'RRD3H_':   ('rain3','{:.1f}',1.0),
-                 'RRD24H':   ('rain24','{:.1f}',1.0),
-                 'RRD1D_':   ('dayRain','{:.1f}',1.0),
-                 'WSAKT_':   ('windSpeed','{:.1f}',3.6),
-                 'WRAKT_':   ('windDir','{:.0f}',1.0),
-                 'WBAKT_':   ('windGust','{:.1f}',3.6),
-                 'WSM10_':   ('windSpeed10','{:.1f}',1.0),
-                 'WRM10_':   ('','{:.1f}',1.0),
-                 'WSMX1H':   ('','{:.1f}',1.0),
-                 'WSMX1D':   ('','{:.1f}',1.0),
-                 'WBMX1D':   ('','{:.1f}',1.0),
-                 'WCAKT_':   ('windchill','{:.1f}',1.0),
-                 'WCMN1H':   ('windchill1hMin','{:.1f}',1.0),
-                 'WCMN1D':   ('windchillDayMin','{:.1f}',1.0),
-                 'LDAKT_':   ('barometer','{:.1f}',1.0),
-                 'LDABS_':   ('pressure','{:.1f}',1.0),
-                 'LDD1H_':   ('barometer1hDiff','{:.1f}',1.0),
-                 'LDD3H_':   ('pressure3hDiff','{:.1f}',1.0),
-                 'LDD24H':   ('pressure24hDiff','{:.1f}',1.0),
-                 'EVA1D_':   ('dayET','{:.1f}',1.0),
-                 'SOD1H_':   ('','{:.1f}',1.0),
-                 'SOD1D_':   ('','{:.1f}',1.0),
-                 'BEDGRA':   ('','{:.1f}',1.0),
-                 'SSAKT_':   ('radiation','{:.0f}',1.0),
-                 'SSMX1H':   ('radiation1hMax','{:.0f}',1.0),
-                 'SSMX1D':   ('radiationDayMax','{:.0f}',1.0),
-                 'UVINDX':   ('UV','{:.1f}',1.0),
-                 'UVMX1D':   ('UVDayMax','{:.1f}',1.0),
-                 'WOLKUG':   ('','{:.1f}',1.0),
-                 'SIWEIT':   ('','{:.1f}',1.0),
-                 'SNEHOE':   ('','{:.1f}',1.0),
-                 'SNEDAT':   ('','date',1.0),
-                 'SNEFGR':   ('','{:.1f}',1.0),
-                 'T2M1M_':   ('outTempMonthAvg','{:.2f}',1.0),
-                 'T2M1MA':   ('','{:.1f}',1.0),
-                 'RRDATU':   ('lastRainDate','date',1.0),
-                 'RRGEST':   ('yesterdayRain','{:.1f}',1.0),
-                 'RRD1M_':   ('monthRain','{:.1f}',1.0),
-                 'RRD1MR':   ('','{:.1f}',1.0),
-                 'RRD1A_':   ('yearRain','{:.1f}',1.0),
-                 'RRD1AR':   ('','{:.1f}',1.0),
-                 'EVAD1M':   ('monthET','{:.1f}',1.0),
-                 'EVAD1A':   ('yearET','{:.1f}',1.0),
-                 'SOD1M_':   ('','{:.1f}',1.0),
-                 'SOD1MR':   ('','{:.1f}',1.0),
-                 'SOD1A_':   ('','{:.1f}',1.0),
-                 'SOD1AR':   ('','{:.1f}',1.0),
-                 'KLTSUM':   ('cooldegsum','{:.1f}',1.0),
-                 'WRMSUM':   ('heatdegsum','{:.1f}',1.0),
-                 'GRASUM':   ('growdegsum','{:.1f}',1.0),
-                 'GRADAT':   ('','date',1.0),
-                 'TSOI50':   ('','{:.1f}',1.0),
-                 'TSOI10':   ('','{:.1f}',1.0),
-                 'TSOI20':   ('','{:.1f}',1.0),
-                 'WBMX1H':   ('','{:.1f}',3.6),
-                 'SSSUMG':   ('radiationYesterdayIntegral','{:.0f}',1.0)
+    _DATA_MAP = {'T2AKT_':   ('outTemp','','','{:.1f}'),
+                 'T2MIN_':   ('outTempDayMin','','','{:.1f}'),
+                 'T2MAX_':   ('outTempDayMax','','','{:.1f}'),
+                 'T2D1H_':   ('outTempDiff1h','','','{:.1f}'),
+                 'T5AKT_':   ('','','','{:.1f}'),
+                 'T5MIN_':   ('','','','{:.1f}'),
+                 'LFAKT_':   ('outHumidity','','','{:.0f}'),
+                 'RRD05_':   ('rain','','','{:.1f}'),
+                 'RRD10_':   ('rain10m','','','{:.1f}'),
+                 'RRD1H_':   ('hourRain','','','{:.1f}'),
+                 'RRD3H_':   ('rain3','','','{:.1f}'),
+                 'RRD24H':   ('rain24','','','{:.1f}'),
+                 'RRD1D_':   ('dayRain','','','{:.1f}'),
+                 'WSAKT_':   ('windSpeed','','','{:.1f}'),        # km/h
+                 'WRAKT_':   ('windDir','','','{:.0f}'),
+                 'WBAKT_':   ('windGust','','','{:.1f}'),         # km/h
+                 'WSM10_':   ('windSpeed10','','','{:.1f}'),      # km/h
+                 'WRM10_':   ('','','','{:.1f}'),
+                 'WSMX1H':   ('windSpeed','1h','max','{:.1f}'),   # km/h
+                 'WSMX1D':   ('windSpeed','Day','max','{:.1f}'),  # km/h
+                 'WBMX1D':   ('windGust','Day','max','{:.1f}'),   # km/h
+                 'WCAKT_':   ('windchill','','','{:.1f}'),
+                 'WCMN1H':   ('windchill1hMin','','','{:.1f}'),
+                 'WCMN1D':   ('windchillDayMin','','','{:.1f}'),
+                 'LDAKT_':   ('barometer','','','{:.1f}'),
+                 'LDABS_':   ('pressure','','','{:.1f}'),
+                 'LDD1H_':   ('barometer','1h','diff','{:.1f}'),
+                 'LDD3H_':   ('barometer','3h','diff','{:.1f}'),
+                 'LDD24H':   ('barometer','24h','diff','{:.1f}'),
+                 'EVA1D_':   ('dayET','','','{:.1f}'),
+                 'SOD1H_':   ('','','','{:.1f}'),
+                 'SOD1D_':   ('','','','{:.1f}'),
+                 'BEDGRA':   ('','','','{:.1f}'),
+                 'SSAKT_':   ('radiation','','','{:.0f}'),
+                 'SSMX1H':   ('radiation1hMax','','','{:.0f}'),
+                 'SSMX1D':   ('radiation','Day','max','{:.0f}'),
+                 'UVINDX':   ('UV','','','{:.1f}'),
+                 'UVMX1D':   ('UVDayMax','','','{:.1f}'),
+                 'WOLKUG':   ('','','','{:.1f}'),
+                 'SIWEIT':   ('','','','{:.1f}'),
+                 'SNEHOE':   ('','','','{:.1f}'),
+                 'SNEDAT':   ('','','','date'),
+                 'SNEFGR':   ('','','','{:.1f}'),
+                 'T2M1M_':   ('outTempMonthAvg','','','{:.2f}'),
+                 'T2M1MA':   ('','','','{:.1f}'),
+                 'RRDATU':   ('lastRainDate','','','date'),
+                 'RRGEST':   ('yesterdayRain','','','{:.1f}'),
+                 'RRD1M_':   ('monthRain','','','{:.1f}'),
+                 'RRD1MR':   ('','','','{:.1f}'),
+                 'RRD1A_':   ('yearRain','','','{:.1f}'),
+                 'RRD1AR':   ('','','','{:.1f}'),
+                 'EVAD1M':   ('monthET','','','{:.1f}'),
+                 'EVAD1A':   ('yearET','','','{:.1f}'),
+                 'SOD1M_':   ('','','','{:.1f}'),
+                 'SOD1MR':   ('','','','{:.1f}'),
+                 'SOD1A_':   ('','','','{:.1f}'),
+                 'SOD1AR':   ('','','','{:.1f}'),
+                 'KLTSUM':   ('cooldegsum','','','{:.1f}'),
+                 'WRMSUM':   ('heatdegsum','','','{:.1f}'),
+                 'GRASUM':   ('growdegsum','','','{:.1f}'),
+                 'GRADAT':   ('','','','date'),
+                 'TSOI50':   ('','','','{:.1f}'),
+                 'TSOI10':   ('','','','{:.1f}'),
+                 'TSOI20':   ('','','','{:.1f}'),
+                 'WBMX1H':   ('windGust','1h','max','{:.1f}'), # km/h
+                 'SSSUMG':   ('radiationYesterdayIntegral','','','{:.0f}')
                 }
 
+    # Note: The units Wetternetz Sachsen requests are not fully covered 
+    # by one of the standard unit systems. See function __wns_umwandeln()
+    # for details.
+    _UNIT_MAP = {'group_rain':'mm',
+                 'group_rainrate':'mm_per_hour',
+                 'group_speed':'km_per_hour'
+                }
+                 
     def __init__(self, q, api_key, station='WNS', server_url=Wns.DEFAULT_URL,
                  skip_upload=False, manager_dict=None,
                  post_interval=None, max_backlog=sys.maxsize, stale=None,
@@ -228,6 +240,15 @@ class WnsThread(weewx.restx.RESTThread):
         self.server_url = server_url
         loginf("Data will be uploaded to %s" % self.server_url)
         self.skip_upload = to_bool(skip_upload)
+        
+        # report field names to syslog
+        loginf("Fields: %s" % ';'.join(self._DATA_MAP))
+
+        # report unit map to syslog
+        __x=""
+        for __i in self._UNIT_MAP:
+            __x="%s %s:%s" % (__x,__i,self._UNIT_MAP[__i])
+        loginf("Special units:%s" % __x)
 
     def __get_change_time(self,record_m,value_name,diff_name):
         """calculate value change during a certain time period,
@@ -272,28 +293,50 @@ class WnsThread(weewx.restx.RESTThread):
 #        datei.close()
 
         __data = {
-            #'STA_ID': self.station,  # integer identifier, usually "0"
-            #'STAKEN': '',
+            #'STA_ID': self.station,
+            #'STAKEN': self.api_key,
             'TMPVER': 'WNS_V2.3',
             'WSOVER': "WEEWX_%s" % (weewx.__version__),
             'ZEIT__': time.strftime("%H:%M",
                                      time.gmtime(record_m['dateTime'])),
             'DATUM_': time.strftime("%d.%m.%Y",
                                      time.gmtime(record_m['dateTime'])),
+            # If 'ZEIT__' is in UTC, 'UTCDIF' needs to be 0.
+            # If UTCDIF is '--', 'ZEIT__' is interpreted as local time.
             'UTCDIF': '0'
             }
 
         for key in self._DATA_MAP:
-            rkey = self._DATA_MAP[key][0]
-            fstr = self._DATA_MAP[key][1]
-            fakt = self._DATA_MAP[key][2]
+            # archive column name
+            rkey = "%s%s%s" % (self._DATA_MAP[key][0],
+                               self._DATA_MAP[key][1],
+                               self._DATA_MAP[key][2].capitalize())
+            # format string
+            fstr = self._DATA_MAP[key][3]
+            
             if (rkey in record_m and record_m[rkey] is not None):
                 try:
-                    if fstr == 'date':
+                    # Note: The units Wetternetz Sachsen requests are
+                    # not fully covered by one of the standard unit systems.
+                    
+                    # get value with individual unit
+                    __vt = weewx.units.as_value_tuple(record_m,rkey)
+                    # if unit group (__vt[2]) is defined in _UNIT_MAP
+                    # convert to new unit
+                    if __vt[2] in self._UNIT_MAP:
+                        logdbg("%s convert unit from %.3f %s %s" % (rkey,__vt[0],__vt[1],__vt[2]))
+                        __vt=weewx.units.convert(__vt,self._UNIT_MAP[__vt[2]])
+                        logdbg("%s converted unit to %.3f %s %s" % (rkey,__vt[0],__vt[1],__vt[2]))
+
+                    # format value to string
+                    if __vt[2]=='group_time':
+                        # date or time values
                         __data[key] = time.strftime("%d.%m.%Y",
                                                time.gmtime(record_m[rkey]))
                     else:
-                        __data[key] = fstr.format(record_m[rkey]*fakt)
+                        # numeric values
+                        #__data[key] = fstr.format(record_m[rkey]*fakt)
+                        __data[key] = fstr.format(__vt[0])
                 except (TypeError, ValueError) as e:
                     logerr("%s:%s: %s" % (key,rkey,e))
                     __data[key] = '--'
@@ -303,6 +346,8 @@ class WnsThread(weewx.restx.RESTThread):
 
     def format_url(self, record):
         """Return an URL for doing a POST to wns"""
+        
+        # create Wetternetz Sachsen dataset
         data = WnsThread.__wns_umwandeln(self,record)
         
         zeilen=[]
@@ -363,6 +408,8 @@ class WnsThread(weewx.restx.RESTThread):
                 if not _result[1] == _result[2]:
                     logerr("calculate radation integral: inconsistent units")
                     return None
+                if weewx.debug >= 2:
+                    logdbg("radiation integral %.1f" % _result[0])
                 return _result[0]
         except weedb.OperationalError as e:
             log.debug("calculate radiation integral %s: Database OperationalError '%s'",self.protocol_name,e)
@@ -406,12 +453,14 @@ class WnsThread(weewx.restx.RESTThread):
         except weedb.OperationalError:
             _ago1_ts = None
         
-        loginf("get_record dateTime %s, Tagesanfang %s, vor 1h %s" %
-            (time.strftime("%Y-%m-%d %H:%M:%S",
+        # debugging output to syslog
+        if weewx.debug >= 2:
+            logdbg("get_record dateTime %s, Tagesanfang %s, vor 1h %s" %
+                (time.strftime("%Y-%m-%d %H:%M:%S",
                                      time.gmtime(_time_ts)),
-            time.strftime("%Y-%m-%d %H:%M:%S",
+                time.strftime("%Y-%m-%d %H:%M:%S",
                                      time.gmtime(_sod_ts)),
-            time.strftime("%Y-%m-%d %H:%M:%S",
+                time.strftime("%Y-%m-%d %H:%M:%S",
                                      time.gmtime(_ago1_ts))))
 
         # get midnight-to-midnight time span according to Tom Keffer
@@ -426,6 +475,8 @@ class WnsThread(weewx.restx.RESTThread):
         h1timespan = TimeSpan(_time_ts-3600,_time_ts)
         h3timespan = TimeSpan(_time_ts-10800,_time_ts)
         h24timespan = TimeSpan(_time_ts-86400,_time_ts)
+        # last 10 minutes
+        m10timespan = TimeSpan(_time_ts-600,_time_ts)
         
         try:
             # minimum and maximum temperature of the day
@@ -511,6 +562,10 @@ class WnsThread(weewx.restx.RESTThread):
             if 'rain3' not in _datadict:
                 _rain_sum = weewx.xtypes.get_aggregate('rain',h3timespan,'sum',dbmanager)
                 _datadict['rain3'] = weewx.units.convertStd(_rain_sum,_datadict['usUnits'])[0]
+            # rain sum of the last 10 minutes
+            if 'rain10m' not in _datadict:
+                _rain_sum = weewx.xtypes.get_aggregate('rain',m10timespan,'sum',dbmanager)
+                _datadict['rain10m'] = weewx.units.convertStd(_rain_sum,_datadict['usUnits'])[0]
         except Exception as e:
             logerr("rain %s" % e)
         
@@ -530,44 +585,43 @@ class WnsThread(weewx.restx.RESTThread):
         except Exception as e:
             logerr("ET %s" % e)
         
-        try:
-            # radiation, today maximum
-            if 'radiationDayMax' not in _datadict:
-                _rain_sum = weewx.xtypes.get_aggregate('radiation',daytimespan,'max',dbmanager)
-                _datadict['radiationDayMax'] = weewx.units.convertStd(_rain_sum,_datadict['usUnits'])[0]
-        except Exception as e:
-            logerr("radiation %s" % e)
-
-        try:
-            # difference values require all measuring units to be 0
-            # at the same point
-            if 'barometer1hDiff' not in _datadict:
-                __result = weewx.xtypes.get_aggregate('barometer',h1timespan,'diff',dbmanager)
-                _datadict['barometer1hDiff'] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
-            if 'barometer3hDiff' not in _datadict:
-                __result = weewx.xtypes.get_aggregate('barometer',h3timespan,'diff',dbmanager)
-                _datadict['barometer3hDiff'] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
-            if 'barometer24hDiff' not in _datadict:
-                __result = weewx.xtypes.get_aggregate('barometer',h24timespan,'diff',dbmanager)
-                _datadict['barometer24hDiff'] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
-        except Exception as e:
-            logerr("barometer %s" % e)
-        
-        try:
-            # difference values require all measuring units to be 0
-            # at the same point
-            if 'pressure1hDiff' not in _datadict:
-                __result = weewx.xtypes.get_aggregate('pressure',h1timespan,'diff',dbmanager)
-                _datadict['pressure1hDiff'] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
-            if 'pressure3hDiff' not in _datadict:
-                __result = weewx.xtypes.get_aggregate('pressure',h3timespan,'diff',dbmanager)
-                _datadict['pressure3hDiff'] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
-            if 'pressure24hDiff' not in _datadict:
-                __result = weewx.xtypes.get_aggregate('pressure',h24timespan,'diff',dbmanager)
-                _datadict['pressure24hDiff'] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
-        except Exception as e:
-            logerr("pressure %s" % e)
-        
+        # aggregation values
+        for __key in self._DATA_MAP:
+            # field name
+            __obs=self._DATA_MAP[__key][0]
+            # time span
+            __tim=self._DATA_MAP[__key][1]
+            # aggregation type
+            __agg=self._DATA_MAP[__key][2]
+            # aggregation field name
+            __rky="%s%s%s" % (__obs,__tim,__agg.capitalize())
+            # get aggregation if __tim and __agg are not empty
+            if __tim!='' and __agg!='' and __rky not in _datadict:
+                try:
+                    # time span
+                    if __tim=='1h':
+                        __tts=h1timespan # 1 hour back from now
+                    elif __tim=='3h':
+                        __tts=h3timespan # 3 hours back from now
+                    elif __tim=='24h':
+                        __tts=h24timespan # 24 hours back from now
+                    elif __tim=='Day':
+                        __tts=daytimespan # the actual day local time
+                    elif __tim=='Yesterday':
+                        __tts=yesterdaytimespan # yesterday
+                    elif __tim=='Month':
+                        __tts=monthtimespan # the month the actual day is in
+                    elif __tim=='Year':
+                        __tts=yeartimespan # the year the actual day is in
+                    else:
+                        __tts=None
+                    # get aggregate value
+                    __result = weewx.xtypes.get_aggregate(__obs,__tts,__agg.lower(),dbmanager)
+                    # convert to unit system of _datadict
+                    _datadict[__rky] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
+                except Exception as e:
+                    logerr("%s.%s.%s %s" % (__obs,__tim,__agg,e))
+                
 #        try:
 #            # growing day sum
 #            _soy_ts=yeartimespan.start()

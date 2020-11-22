@@ -2,3 +2,7 @@
 * initial release
 0.2 05nov2020
 * new values and calculations added
+0.3 22nov2020
+* new values and calculations added
+* unit conversion for wind speed changed to use of weewx.units.convert
+* more general code for aggregate calculations
