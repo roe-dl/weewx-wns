@@ -6,3 +6,5 @@
 * new values and calculations added
 * unit conversion for wind speed changed to use of weewx.units.convert
 * more general code for aggregate calculations
+0.4 18jan2021
+* bug corrected that caused data to get confused in some circumstances
