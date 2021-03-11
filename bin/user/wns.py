@@ -11,8 +11,13 @@ Minimal configuration
 
 [StdRESTful]
     [[Wns]]
+        enable = true
+        server_url = 'http://www.wetternetz-sachsen.de/get_daten_23.php'
         station = station ID
         api_key = WNS-Kennung
+        T5AKT_ = None
+        skip_upload = false
+        log_url = false
 
 """
 
@@ -47,7 +52,7 @@ from weeutil.weeutil import to_bool, to_int
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 
-VERSION = "0.4"
+VERSION = "0.5"
 
 REQUIRED_WEEWX = "3.8.0"
 if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
@@ -223,7 +228,7 @@ class WnsThread(weewx.restx.RESTThread):
                  post_interval=None, max_backlog=sys.maxsize, stale=None,
                  log_success=True, log_failure=True,
                  timeout=60, max_tries=3, retry_wait=5,
-                 T5AKT_=None):
+                 T5AKT_=None,log_url=False):
         super(WnsThread, self).__init__(q,
                                           protocol_name='Wns',
                                           manager_dict=manager_dict,
@@ -241,6 +246,7 @@ class WnsThread(weewx.restx.RESTThread):
         self.server_url = server_url
         loginf("Data will be uploaded to %s" % self.server_url)
         self.skip_upload = to_bool(skip_upload)
+        self.log_url = to_bool(log_url)
         
         # set up column name for 5cm temperature from weewx.conf
         try:
@@ -380,10 +386,11 @@ class WnsThread(weewx.restx.RESTThread):
         url = '%s?var=%s;%s;%s' % (self.server_url, 
                           self.station, self.api_key, __body)
 
-        loginf("url %s" % url)
-
-        if weewx.debug >= 2:
+        if self.log_url:
+            loginf("url %s" % url)
+        elif weewx.debug >= 2:
             logdbg("url: %s" % url)
+
         return url
 
 #    def get_post_body(self, record):
@@ -419,7 +426,7 @@ class WnsThread(weewx.restx.RESTThread):
         
         try:
             _result = dbmanager.getSql(
-                    "SELECT SUM(radiation*interval)/60.0, "
+                    "SELECT SUM(radiation*`interval`)/60.0, "
                     "MIN(usUnits),MAX(usUnits) FROM %s "
                     "WHERE dateTime>? AND dateTime<=?"
                     % dbmanager.table_name,timespan)

@@ -11,7 +11,7 @@ def loader():
 class WnsInstaller(ExtensionInstaller):
     def __init__(self):
         super(WnsInstaller, self).__init__(
-            version="0.1",
+            version="0.5",
             name='WNS',
             description='Upload weather data to WNS.',
             author="Johanna Roedenbeck",
@@ -20,7 +20,11 @@ class WnsInstaller(ExtensionInstaller):
             config={
                 'StdRESTful': {
                     'Wns': {
+                        'enable':'true',
                         'station': 'replace_me',
-                        'api_key': 'replace_me'}}},
+                        'api_key': 'replace_me',
+                        'T5AKT_':'None',
+                        'skip_upload':'false',
+                        'log_url':'false'}}},
             files=[('bin/user', ['bin/user/wns.py'])]
             )

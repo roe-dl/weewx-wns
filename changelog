@@ -8,3 +8,6 @@
 * more general code for aggregate calculations
 0.4 18jan2021
 * bug corrected that caused data to get confused in some circumstances
+0.5 11mar2021
+* option 'log_url' to control logging of the upload URL added
+* documentation updated
