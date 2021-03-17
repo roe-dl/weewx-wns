@@ -58,3 +58,8 @@ You will need an account at Wetternetz-Sachsen
 
 * Set log_url to true to log the URL sent to Wetternetz Sachsen to syslog.
   This is for trouble shooting.
+
+## Links:
+
+* [WeeWX homepage](http://weewx.com) - [WeeWX Wiki](https://github.com/weewx/weewx/wiki)
+* [Wöllsdorf weather conditions](https://www.woellsdorf-wetter.de)
