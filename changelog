@@ -11,3 +11,6 @@
 0.5 11mar2021
 * option 'log_url' to control logging of the upload URL added
 * documentation updated
+0.6 25mar2022
+* option 'SOD1D_' for sun duration
+* buf fixes

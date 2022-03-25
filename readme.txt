@@ -23,7 +23,8 @@ sudo wee_extension --install weewx-wns.zip
         enable = true
         station = station ID
         api_key = WNS-Kennung
-        T5AKT_ = column that holds 5cm-temperature
+        T5AKT_ = observation type that holds 5cm-temperature
+        SOD1D_ = observation type that holds sun duration
         skip_upload = false
         log_url = false
 
@@ -39,6 +40,9 @@ Sachsen administrator.
 
 Set T5AKT_ = None if you do not measure 5cm temperature. Otherwise give the
 WeeWX observation type you use for that value.
+
+Set SOD1D_ to the observation type of sun duration. If you do not have
+such an observation type set it to None.
 
 Set skip_upload to true to do all the calculation and preparation without
 doing the real upload. This is for testing.

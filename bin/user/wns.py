@@ -1,4 +1,4 @@
-# Copyright 2020 Johanna Roedenbeck
+# Copyright 2020,2022 Johanna Roedenbeck
 # derived from Windy driver by Matthew Wall
 # thanks to Gary and Tom Keffer from Weewx development group
 
@@ -16,6 +16,7 @@ Minimal configuration
         station = station ID
         api_key = WNS-Kennung
         T5AKT_ = None
+        SOD1D_ = None
         skip_upload = false
         log_url = false
 
@@ -52,7 +53,7 @@ from weeutil.weeutil import to_bool, to_int
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 
-VERSION = "0.5"
+VERSION = "0.6"
 
 REQUIRED_WEEWX = "3.8.0"
 if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
@@ -178,7 +179,7 @@ class WnsThread(weewx.restx.RESTThread):
                  ('LDD24H',  'barometer','24h','diff','{:.1f}'),
                  ('EVA1D_',  'dayET','','','{:.1f}'),
                  ('SOD1H_',  '','','','{:.1f}'),
-                 ('SOD1D_',  '','','','{:.1f}'),
+                 ('SOD1D_',  '','','','HH:MM'),
                  ('BEDGRA',  '','','','{:.1f}'),
                  ('SSAKT_',  'radiation','','','{:.0f}'),
                  ('SSMX1H',  'radiation1hMax','','','{:.0f}'),
@@ -200,9 +201,9 @@ class WnsThread(weewx.restx.RESTThread):
                  ('RRD1AR',  '','','','{:.1f}'),
                  ('EVAD1M',  'monthET','','','{:.1f}'),
                  ('EVAD1A',  'yearET','','','{:.1f}'),
-                 ('SOD1M_',  '','','','{:.1f}'),
+                 ('SOD1M_',  '','','','{:.2f}'),
                  ('SOD1MR',  '','','','{:.1f}'),
-                 ('SOD1A_',  '','','','{:.1f}'),
+                 ('SOD1A_',  '','','','{:.2f}'),
                  ('SOD1AR',  '','','','{:.1f}'),
                  ('KLTSUM',  'cooldegsum','','','{:.1f}'),
                  ('WRMSUM',  'heatdegsum','','','{:.1f}'),
@@ -228,7 +229,7 @@ class WnsThread(weewx.restx.RESTThread):
                  post_interval=None, max_backlog=sys.maxsize, stale=None,
                  log_success=True, log_failure=True,
                  timeout=60, max_tries=3, retry_wait=5,
-                 T5AKT_=None,log_url=False):
+                 T5AKT_=None,SOD1D_=None,log_url=False):
         super(WnsThread, self).__init__(q,
                                           protocol_name='Wns',
                                           manager_dict=manager_dict,
@@ -259,6 +260,20 @@ class WnsThread(weewx.restx.RESTThread):
         except (ValueError,TypeError) as e:
           logerr("config value T5AKT_ is invalid: %s" % e)
         
+        # set up column name for sunshine duration from weewx.conf
+        try:
+            if SOD1D_ is not None and SOD1D_.lower()!='none' and SOD1D_!='':
+                for i,v in enumerate(self._DATA_MAP):
+                    if v[0]=='SOD1H_':
+                        self._DATA_MAP[i] = (v[0],str(SOD1D_),'1h','sum',self._DATA_MAP[i][4])
+                    if v[0]=='SOD1D_':
+                        self._DATA_MAP[i] = (v[0],str(SOD1D_),'Day','sum',self._DATA_MAP[i][4])
+                    if v[0]=='SOD1M_':
+                        self._DATA_MAP[i] = (v[0],str(SOD1D_),'Month','sum',self._DATA_MAP[i][4])
+                    if v[0]=='SOD1A_':
+                        self._DATA_MAP[i] = (v[0],str(SOD1D_),'Year','sum',self._DATA_MAP[i][4])
+        except (ValueError,TypeError) as e:
+            logerr("config value SOD1D_ is invalid: %s" % e)
         # report field names to syslog
         loginf("Fields: %s" % ';'.join(v[0] for v in self._DATA_MAP))
 
@@ -358,15 +373,37 @@ class WnsThread(weewx.restx.RESTThread):
                         __vt=weewx.units.convert(__vt,self._UNIT_MAP[__vt[2]])
                         logdbg("%s converted unit to %.3f %s %s" % (rkey,__vt[0],__vt[1],__vt[2]))
 
+                    if key in ['SOD1D_','SOD1M_','SOD1A_']:
+                        __vt = weewx.units.convert(__vt,'hour')
+                        
+                    # sunshine duration during the last hour
+                    if key=='SOD1H_':
+                        __vt = weewx.units.convert(__vt,'minute')
+                        # There is a maximum of 60 min. of sunshine during
+                        # 1 hour. For the value of 65.0 see next comment.
+                        if __vt[0]>65.0:
+                            raise ValueError("more than 60 min. of sunshine during 1 hour")
+                        # If the sunshine duration ist measured in ticks
+                        # the reading can be a little bit above 60 min.
+                        # That could confuse limit checking at the other
+                        # side.
+                        if __vt[0]>60.0:
+                            __vt = (60.0,__vt[1],__vt[2])
+
                     # format value to string
                     if __vt[2]=='group_time':
                         # date or time values
                         __data.append(time.strftime("%d.%m.%Y",
                                                time.gmtime(record_m[rkey])))
+                    elif fstr == 'HH:MM':
+                        if __vt[1]!='minute':
+                            __vt = weewx.units.convert(__vt,'minute')
+                        hour,min = divmod(__vt[0],60)
+                        __data.append('%.0f:%02.0f' % (hour,min))
                     else:
                         # numeric values
                         __data.append(fstr.format(__vt[0]))
-                except (TypeError,ValueError,IndexError) as e:
+                except (TypeError,ValueError,IndexError,KeyError) as e:
                     logerr("%s:%s: %s" % (key,rkey,e))
                     __data.append('--')
             else:
@@ -708,6 +745,8 @@ class WnsThread(weewx.restx.RESTThread):
                         __tts=None
                     # get aggregate value
                     __result = weewx.xtypes.get_aggregate(__obs,__tts,__agg.lower(),dbmanager)
+                    # register name with unit group if necessary
+                    weewx.units.obs_group_dict.setdefault(__rky,__result[2])
                     # convert to unit system of _datadict
                     _datadict[__rky] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
                 except Exception as e:
