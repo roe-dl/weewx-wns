@@ -423,9 +423,7 @@ class WnsThread(weewx.restx.RESTThread):
         url = '%s?var=%s;%s;%s' % (self.server_url, 
                           self.station, self.api_key, __body)
 
-        if self.log_url:
-            loginf("url %s" % url)
-        elif weewx.debug >= 2:
+        if weewx.debug >= 2:
             logdbg("url: %s" % url)
 
         return url
