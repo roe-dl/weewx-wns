@@ -580,7 +580,7 @@ class WnsThread(weewx.restx.RESTThread):
         # get midnight-to-midnight time span according to Tom Keffer
         daytimespan = weeutil.weeutil.archiveDaySpan(_time_ts)
         # yesterday
-        yesterdaytimespan = weeutil.weeutil.archiveDaySpan(_time_ts,1,1)
+        yesterdaytimespan = weeutil.weeutil.archiveDaySpan(_time_ts, days_ago=1)
         # get actual month
         monthtimespan = weeutil.weeutil.archiveMonthSpan(_time_ts)
         # get actual year
