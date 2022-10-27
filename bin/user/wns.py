@@ -53,7 +53,7 @@ from weeutil.weeutil import to_bool, to_int
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 
-VERSION = "0.7b1"
+VERSION = "0.7b2"
 
 REQUIRED_WEEWX = "3.8.0"
 if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
@@ -529,7 +529,10 @@ class WnsThread(weewx.restx.RESTThread):
             self.last_gts_date += 86400
             _loop_ct+=1
         
-        loginf("GTS %s, %s loops" % (self.gts_value,_loop_ct))
+        if _loop_ct>0:
+            loginf("GTS %s, %s loops" % (self.gts_value,_loop_ct))
+        else:
+            logdbg("GTS %s, %s loops" % (self.gts_value,_loop_ct))
 
     def get_record(self, record, dbmanager):
         """Augment record data with additional data from the archive.
