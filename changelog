@@ -13,4 +13,8 @@
 * documentation updated
 0.6 25mar2022
 * option 'SOD1D_' for sun duration
-* buf fixes
+* bug fixes
+0.7 27oct2022
+* adapt to removed grace parameter in WeeWX 4.9.x
+* register mandatory option "station"
+* use GTS from weewx-GTS if present

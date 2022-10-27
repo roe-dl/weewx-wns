@@ -53,7 +53,7 @@ from weeutil.weeutil import to_bool, to_int
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 
-VERSION = "0.7b2"
+VERSION = "0.7"
 
 REQUIRED_WEEWX = "3.8.0"
 if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
