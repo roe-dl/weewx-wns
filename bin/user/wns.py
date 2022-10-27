@@ -53,7 +53,7 @@ from weeutil.weeutil import to_bool, to_int
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 
-VERSION = "0.6"
+VERSION = "0.7b1"
 
 REQUIRED_WEEWX = "3.8.0"
 if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
@@ -98,7 +98,7 @@ class Wns(weewx.restx.StdRESTful):
     def __init__(self, engine, cfg_dict):
         super(Wns, self).__init__(engine, cfg_dict)
         loginf("version is %s" % VERSION)
-        site_dict = weewx.restx.get_site_dict(cfg_dict, 'Wns', 'api_key')
+        site_dict = weewx.restx.get_site_dict(cfg_dict, 'Wns', 'api_key', 'station')
         if site_dict is None:
             return
 
@@ -651,17 +651,18 @@ class WnsThread(weewx.restx.RESTThread):
             _datadict['radiationYesterdayIntegral']=_result
                 
         # Grünlandtemperatursumme
-        try:
-            WnsThread.calc_gts(self,_time_ts,dbmanager)
-            if self.gts_value is not None:
-                _datadict['GTS']=weewx.units.convertStd(
-                  (self.gts_value,'degree_C_day','group_degree_day'),
-                  _datadict['usUnits'])[0]
-            if self.gts_date is not None:
-                _datadict['GTSdate']=self.gts_date
-        except (ValueError,TypeError,IndexError) as e:
-            logerr("GTS %s" % e)
-    
+        if 'GTS' not in _datadict:
+            try:
+                WnsThread.calc_gts(self,_time_ts,dbmanager)
+                if self.gts_value is not None:
+                    _datadict['GTS']=weewx.units.convertStd(
+                      (self.gts_value,'degree_C_day','group_degree_day'),
+                      _datadict['usUnits'])[0]
+                if self.gts_date is not None:
+                    _datadict['GTSdate']=self.gts_date
+            except (ValueError,TypeError,IndexError) as e:
+                logerr("GTS %s" % e)
+
         try:
             # temperature average of the month
             _temp_avg = weewx.xtypes.get_aggregate('outTemp',monthtimespan,'avg',dbmanager)
