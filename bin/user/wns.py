@@ -1,4 +1,4 @@
-# Copyright 2020,2022 Johanna Roedenbeck
+# Copyright 2020,2022,2023 Johanna Roedenbeck
 # derived from Windy driver by Matthew Wall
 # thanks to Gary and Tom Keffer from Weewx development group
 
@@ -17,6 +17,9 @@ Minimal configuration
         api_key = WNS-Kennung
         T5AKT_ = None
         SOD1D_ = None
+        TSOI10 = None
+        TSOI20 = None
+        TSOI50 = None
         skip_upload = false
         log_url = false
 
@@ -53,7 +56,7 @@ from weeutil.weeutil import to_bool, to_int
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 
-VERSION = "0.7"
+VERSION = "0.8"
 
 REQUIRED_WEEWX = "3.8.0"
 if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
@@ -209,9 +212,9 @@ class WnsThread(weewx.restx.RESTThread):
                  ('WRMSUM',  'heatdegsum','','','{:.1f}'),
                  ('GRASUM',  'GTS','','','{:.1f}'),
                  ('GRADAT',  'GTSdate','','','date'),
-                 ('TSOI50',  '','','','{:.1f}'),
                  ('TSOI10',  '','','','{:.1f}'),
                  ('TSOI20',  '','','','{:.1f}'),
+                 ('TSOI50',  '','','','{:.1f}'),
                  ('WBMX1H',  'windGust','1h','max','{:.1f}'), # km/h
                  ('SSSUMG',  'radiationYesterdayIntegral','','','{:.0f}')
                 ]
@@ -229,7 +232,8 @@ class WnsThread(weewx.restx.RESTThread):
                  post_interval=None, max_backlog=sys.maxsize, stale=None,
                  log_success=True, log_failure=True,
                  timeout=60, max_tries=3, retry_wait=5,
-                 T5AKT_=None,SOD1D_=None,log_url=False):
+                 T5AKT_=None,SOD1D_=None,TSOI10=None,TSOI20=None,TSOI50=None,
+                 log_url=False):
         super(WnsThread, self).__init__(q,
                                           protocol_name='Wns',
                                           manager_dict=manager_dict,
@@ -277,6 +281,33 @@ class WnsThread(weewx.restx.RESTThread):
         # report field names to syslog
         loginf("Fields: %s" % ';'.join(v[0] for v in self._DATA_MAP))
 
+        # set up column name for 10cm soil temperature from weewx.conf
+        try:
+          if TSOI10 is not None and TSOI10!='None' and TSOI10!='':
+              for i,v in enumerate(self._DATA_MAP):
+                if v[0]=='TSOI10':
+                  self._DATA_MAP[i]=('TSOI10',str(TSOI10),'','',self._DATA_MAP[i][4])
+        except (ValueError,TypeError) as e:
+          logerr("config value TSOI10 is invalid: %s" % e)
+        
+        # set up column name for 20cm soil temperature from weewx.conf
+        try:
+          if TSOI20 is not None and TSOI20!='None' and TSOI20!='':
+              for i,v in enumerate(self._DATA_MAP):
+                if v[0]=='TSOI20':
+                  self._DATA_MAP[i]=('TSOI20',str(TSOI20),'','',self._DATA_MAP[i][4])
+        except (ValueError,TypeError) as e:
+          logerr("config value TSOI20 is invalid: %s" % e)
+        
+        # set up column name for 50cm soil temperature from weewx.conf
+        try:
+          if TSOI50 is not None and TSOI50!='None' and TSOI50!='':
+              for i,v in enumerate(self._DATA_MAP):
+                if v[0]=='TSOI50':
+                  self._DATA_MAP[i]=('TSOI50',str(TSOI50),'','',self._DATA_MAP[i][4])
+        except (ValueError,TypeError) as e:
+          logerr("config value TSOI50 is invalid: %s" % e)
+        
         # report unit map to syslog
         __x=""
         for __i in self._UNIT_MAP:

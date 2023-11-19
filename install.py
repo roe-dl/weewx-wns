@@ -11,7 +11,7 @@ def loader():
 class WnsInstaller(ExtensionInstaller):
     def __init__(self):
         super(WnsInstaller, self).__init__(
-            version="0.7",
+            version="0.8",
             name='WNS',
             description='Upload weather data to WNS.',
             author="Johanna Roedenbeck",
