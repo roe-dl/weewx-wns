@@ -20,8 +20,16 @@ You will need an account at Wetternetz-Sachsen
 
 2) run the installer
 
+   WeeWX up to version 4.X
+
    ```
    sudo wee_extension --install weewx-wns.zip
+   ```
+
+   WeeWX from version 5.0 on
+
+   ```
+   sudo weectl extension install weewx-wns.zip
    ```
 
 3) enter parameters in the weewx configuration file
@@ -40,9 +48,18 @@ You will need an account at Wetternetz-Sachsen
 
 4) restart weewx
 
+   for SysVinit systems:
+
    ```
    sudo /etc/init.d/weewx stop
    sudo /etc/init.d/weewx start
+   ```
+
+   for systemd systems:
+
+   ```
+   sudo systemctl stop weewx
+   sudo systemctl start weewx
    ```
 
 ## Configuration instructions:
