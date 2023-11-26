@@ -30,8 +30,19 @@ sudo wee_extension --install weewx-wns.zip
 
 4) restart weewx
 
-sudo /etc/init.d/weewx stop
-sudo /etc/init.d/weewx start
+   for SysVinit systems:
+
+   ```
+   sudo /etc/init.d/weewx stop
+   sudo /etc/init.d/weewx start
+   ```
+
+   for systemd systems:
+
+   ```
+   sudo systemctl stop weewx
+   sudo systemctl start weewx
+   ```
 
 Configuration instructions:
 
@@ -43,6 +54,9 @@ WeeWX observation type you use for that value.
 
 Set SOD1D_ to the observation type of sun duration. If you do not have
 such an observation type set it to None.
+
+Set `TSOI10`, `TSOI20`, and `TSOI50` to the appropriate WeeWX observation
+types if you measure soil temperatures. The number is the depth in cm.
 
 Set skip_upload to true to do all the calculation and preparation without
 doing the real upload. This is for testing.

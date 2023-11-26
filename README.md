@@ -53,7 +53,7 @@ You will need an account at Wetternetz-Sachsen
 * Set `T5AKT_ = None` if you do not measure 5cm temperature. Otherwise give the
   WeeWX observation type you use for that value.
 
-* Set SOD1D_ to the observation type of sun duration. If you do not have
+* Set `SOD1D_` to the observation type of sun duration. If you do not have
   such an observation type set it to None.
 
 * Set `TSOI10`, `TSOI20`, and `TSOI50` to the appropriate WeeWX observation
