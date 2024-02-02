@@ -110,7 +110,7 @@ class Wns(weewx.restx.StdRESTful):
         except weewx.UnknownBinding:
             pass
 
-        self.archive_queue = queue.Queue()
+        self.archive_queue = queue.Queue(5)
         self.archive_thread = WnsThread(self.archive_queue, **site_dict)
 
         self.archive_thread.start()
@@ -146,7 +146,10 @@ class Wns(weewx.restx.StdRESTful):
            "windGustDayMax":"group_speed"})
         
     def new_archive_record(self, event):
-        self.archive_queue.put(event.record)
+        try:
+            self.archive_queue.put(event.record,timeout=10)
+        except queue.Full:
+            logerr('Queue is full. Thread died?')
 
 
 class WnsThread(weewx.restx.RESTThread):

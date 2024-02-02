@@ -21,3 +21,4 @@
 0.8
 * added soil temperature
 * updated docu for WeeWX 5.0
+* limit queue size
