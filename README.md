@@ -36,7 +36,7 @@ You will need an account at Wetternetz-Sachsen
 
    ```shell
    source ~/weewx-venv/bin/activate
-   weectl extension install weewx-svg2png.zip
+   weectl extension install weewx-wns.zip
    ```
    
 3) enter parameters in the weewx configuration file
