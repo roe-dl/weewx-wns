@@ -14,7 +14,7 @@ You will need an account at Wetternetz-Sachsen
 
 1) download
 
-   ```
+   ```shell
    wget -O weewx-wns.zip https://github.com/roe-dl/weewx-wns/archive/master.zip
    ```
 
@@ -22,16 +22,23 @@ You will need an account at Wetternetz-Sachsen
 
    WeeWX up to version 4.X
 
-   ```
+   ```shell
    sudo wee_extension --install weewx-wns.zip
    ```
 
-   WeeWX from version 5.0 on
+   WeeWX from version 5.0 on after WeeWX packet installation
 
-   ```
+   ```shell
    sudo weectl extension install weewx-wns.zip
    ```
 
+   WeeWX from version 5.0 on after WeeWX pip installation into an virtual environment
+
+   ```shell
+   source ~/weewx-venv/bin/activate
+   weectl extension install weewx-svg2png.zip
+   ```
+   
 3) enter parameters in the weewx configuration file
 
    ```
@@ -50,14 +57,14 @@ You will need an account at Wetternetz-Sachsen
 
    for SysVinit systems:
 
-   ```
+   ```shell
    sudo /etc/init.d/weewx stop
    sudo /etc/init.d/weewx start
    ```
 
    for systemd systems:
 
-   ```
+   ```shell
    sudo systemctl stop weewx
    sudo systemctl start weewx
    ```
